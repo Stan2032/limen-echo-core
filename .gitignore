@@ -136,9 +136,6 @@ temp/
 *.swp
 *~
 
-# Ignore this repository’s CI artifacts
-.github/workflows/
-
 # Other system files
 *.pid
 *.seed
