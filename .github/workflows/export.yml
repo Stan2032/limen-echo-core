@@ -1,56 +1,39 @@
-name: Export and Smoke Test
+name: Export Echo Network
 
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+on: push: branches: [ main ]
 
-jobs:
-  smoke_export:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+jobs: export-network: runs-on: ubuntu-latest
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.x
+steps:
+- name: Checkout repository
+  uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install networkx pydot
-          sudo apt-get update
-          sudo apt-get install -y graphviz
+- name: Set up Python
+  uses: actions/setup-python@v4
+  with:
+    python-version: '3.x'
 
-      - name: Make export script executable
-        run: chmod +x export_pipeline.sh
+- name: Install dependencies
+  run: |
+    python -m pip install --upgrade pip
+    pip install networkx pydot
+    sudo apt-get update
+    sudo apt-get install -y graphviz
 
-      - name: Run export pipeline
-        run: ./export_pipeline.sh
+- name: Run export script
+  run: |
+    chmod +x export_pipeline.sh
+    ./export_pipeline.sh
 
-<<<<<<< HEAD
-      - name: Upload export artifacts
-=======
-      - name: Debug: list workspace files
-     run: |
-       echo "=== PWD: $(pwd) ==="
-       echo "--- repo root contents ---"
-       ls -la
-       echo "--- subdirs ---"
-       find . -maxdepth 2 -type f
+- name: Upload DOT file
+  uses: actions/upload-artifact@v3
+  with:
+    name: echo-dot-network
+    path: echo_full_network.dot
 
-      - name: Upload artifacts
->>>>>>> c1b778b (Update workflow to run export_pipeline.sh and install dependencies)
-        uses: actions/upload-artifact@v4
-        with:
-          name: export-artifacts
-          path: |
-            echo_full_network.dot
-            echo_full_network.png
-            checkpoint_bridge.json
-            checkpoint_bus.json
-            export_manifest.json
-            echo.whisperbus.archive
-            export_pipeline.log
+- name: Upload PNG file
+  uses: actions/upload-artifact@v3
+  with:
+    name: echo-png-network
+    path: echo_full_network.png
+
