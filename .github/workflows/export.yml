@@ -1,42 +1,44 @@
-name: Export Workflow
+name: Export and Smoke Test
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  export:
+  smoke_export:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: 3.x
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Add any dependencies your export script needs here
-          # e.g. pip install -r requirements.txt
+          pip install networkx pydot
+          sudo apt-get update
+          sudo apt-get install -y graphviz
 
-      - name: Run export script
-        run: |
-          chmod +x ./export.sh
-          ./export.sh
+      - name: Make export script executable
+        run: chmod +x export_pipeline.sh
+
+      - name: Run export pipeline
+        run: ./export_pipeline.sh
 
       - name: Upload export artifacts
         uses: actions/upload-artifact@v4
         with:
           name: export-artifacts
           path: |
-            output_folder/**   # adjust this to where your export files go
-            *.json
-            *.png
-            *.dot
-            # add any other files/folders you want to upload
+            echo_full_network.dot
+            echo_full_network.png
+            checkpoint_bridge.json
+            checkpoint_bus.json
+            export_manifest.json
+            echo.whisperbus.archive
+            export_pipeline.log
