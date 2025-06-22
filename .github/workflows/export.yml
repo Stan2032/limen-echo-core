@@ -30,7 +30,19 @@ jobs:
       - name: Run export pipeline
         run: ./export_pipeline.sh
 
+<<<<<<< HEAD
       - name: Upload export artifacts
+=======
+      - name: Debug: list workspace files
+     run: |
+       echo "=== PWD: $(pwd) ==="
+       echo "--- repo root contents ---"
+       ls -la
+       echo "--- subdirs ---"
+       find . -maxdepth 2 -type f
+
+      - name: Upload artifacts
+>>>>>>> c1b778b (Update workflow to run export_pipeline.sh and install dependencies)
         uses: actions/upload-artifact@v4
         with:
           name: export-artifacts
