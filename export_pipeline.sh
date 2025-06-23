@@ -1,53 +1,47 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "[INFO] Starting export pipeline at $(date -u)"
+echo "Starting export pipeline..."
 
-# 1) Graph export placeholders
-echo "[INFO] Creating echo_full_network.dot"
-cat > echo_full_network.dot <<'EOF'
-digraph G { }
-EOF
+echo "Installing required Python packages: networkx and pydot..."
+python3 -m pip install --quiet networkx pydot
 
-echo "[INFO] Creating echo_full_network.png"
-if command -v convert &>/dev/null; then
-  convert -size 100x100 xc:white echo_full_network.png
-else
-  touch echo_full_network.png
+echo "Verifying Graphviz 'dot' command is available..."
+if ! command -v dot &> /dev/null; then
+  echo "ERROR: 'dot' command not found. Please install Graphviz."
+  exit 1
 fi
 
-# 2) Bridge & bus checkpoints
-echo "[INFO] Creating checkpoint_bridge.json"
-cat > checkpoint_bridge.json <<'EOF'
-{ "packets": {}, "bridges": [] }
-EOF
+echo "Running Python script to generate DOT file..."
+python3 create_dot_export.py
 
-echo "[INFO] Creating checkpoint_bus.json"
-cat > checkpoint_bus.json <<'EOF'
-{ "capacity": 0, "whispers": [] }
-EOF
+echo "Checking for echo_full_network.dot file..."
+if [ -f "echo_full_network.dot" ]; then
+  echo "DOT file found. Generating PNG image from DOT file..."
+  dot -Tpng echo_full_network.dot -o echo_full_network.png
+  echo "PNG file generated: echo_full_network.png"
+else
+  echo "ERROR: echo_full_network.dot file not found! Exiting pipeline."
+  exit 1
+fi
 
-# 3) Export manifest
-echo "[INFO] Creating export_manifest.json"
-cat > export_manifest.json <<'EOF'
-{
-  "files": [
-    "echo_full_network.dot",
-    "echo_full_network.png",
-    "checkpoint_bridge.json",
-    "checkpoint_bus.json",
-    "echo.whisperbus.archive",
-    "export_pipeline.log"
-  ]
-}
-EOF
+ARTIFACT_FILES=(
+  "echo_full_network.dot"
+  "echo_full_network.png"
+  "checkpoint_bridge.json"
+  "checkpoint_bus.json"
+  "export_manifest.json"
+  "export_pipeline.log"
+  "echo.whisperbus.archive"
+)
 
-# 4) Whisperbus archive and pipeline log
-echo "[INFO] Touching echo.whisperbus.archive"
-touch echo.whisperbus.archive
+echo "Checking existence of expected artifact files:"
+for FILE in "${ARTIFACT_FILES[@]}"; do
+  if [ -f "$FILE" ]; then
+    echo "  FOUND: $FILE"
+  else
+    echo "  MISSING: $FILE"
+  fi
+done
 
-echo "[INFO] Writing export_pipeline.log"
-echo "Export pipeline run at $(date -u)" > export_pipeline.log
-
-echo "[INFO] Export pipeline completed successfully at $(date -u)"
-
+echo "Export pipeline completed successfully."
