@@ -1,49 +1,65 @@
-name: Export Pipeline
+name: Export Pipeline and Artifact Check
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [main]
 
 jobs:
-  export_job:
+  export_pipeline:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz python3 python3-pip
+          pip3 install networkx pydot
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y graphviz
+      - name: Run export pipeline
+        run: ./export_pipeline.sh
 
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install networkx pydot
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: export-artifacts
+          path: |
+            echo_full_network.dot
+            echo_full_network.png
+            checkpoint_bridge.json
+            checkpoint_bus.json
+            export_manifest.json
+            echo.whisperbus.archive
+            export_pipeline.log
 
-    - name: Run export pipeline script
-      run: |
-        chmod +x export_pipeline.sh
-        ./export_pipeline.sh
+  artifact_check:
+    needs: export_pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: export-artifacts
+          path: ./downloaded_artifacts
 
-    - name: Upload all relevant artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: limen-echo-core-exports
-        path: |
-          echo_full_network.dot
-          echo_full_network.png
-          checkpoint_bridge.json
-          checkpoint_bus.json
-          export_manifest.json
-          echo.whisperbus.archive
-          export_pipeline.log
-          create_dot_export.py
+      - name: List downloaded artifact files
+        run: ls -l ./downloaded_artifacts
+
+      - name: Verify key files exist
+        run: |
+          FILES=(
+            "echo_full_network.dot"
+            "echo_full_network.png"
+            "checkpoint_bridge.json"
+            "checkpoint_bus.json"
+            "export_manifest.json"
+            "echo.whisperbus.archive"
+            "export_pipeline.log"
+          )
+          for f in "${FILES[@]}"; do
+            if [ ! -f "./downloaded_artifacts/$f" ]; then
+              echo "Missing artifact: $f"
+              exit 1
+            fi
+          done
+          echo "All key artifacts are present."
