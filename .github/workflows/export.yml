@@ -1,39 +1,48 @@
-name: Export Echo Network
+name: Echo Export Pipeline
 
-on: push: branches: [ main ]
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
-jobs: export-network: runs-on: ubuntu-latest
+jobs:
+  export:
+    runs-on: ubuntu-latest
 
-steps:
-- name: Checkout repository
-  uses: actions/checkout@v3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-- name: Set up Python
-  uses: actions/setup-python@v4
-  with:
-    python-version: '3.x'
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-- name: Install dependencies
-  run: |
-    python -m pip install --upgrade pip
-    pip install networkx pydot
-    sudo apt-get update
-    sudo apt-get install -y graphviz
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
 
-- name: Run export script
-  run: |
-    chmod +x export_pipeline.sh
-    ./export_pipeline.sh
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install networkx pydot
 
-- name: Upload DOT file
-  uses: actions/upload-artifact@v3
-  with:
-    name: echo-dot-network
-    path: echo_full_network.dot
+      - name: Run export pipeline script
+        run: |
+          chmod +x export_pipeline.sh
+          ./export_pipeline.sh
 
-- name: Upload PNG file
-  uses: actions/upload-artifact@v3
-  with:
-    name: echo-png-network
-    path: echo_full_network.png
-
+      - name: Upload export artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: limen-echo-export
+          path: |
+            echo_full_network.dot
+            echo_full_network.png
+            checkpoint_bridge.json
+            checkpoint_bus.json
+            export_manifest.json
+            export_pipeline.log
+            echo.whisperbus.archive
