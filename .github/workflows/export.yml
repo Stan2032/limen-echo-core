@@ -22,15 +22,16 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: export-artifacts
+          name: limen-echo-exports
           path: |
+            limen_echo_bundle.zip
             echo_full_network.dot
             echo_full_network.png
             checkpoint_bridge.json
             checkpoint_bus.json
             export_manifest.json
             echo.whisperbus.archive
-            export_pipeline.log
+            export_checksums.sha256
 
   artifact_check:
     needs: export_pipeline
