@@ -1,19 +1,16 @@
 import json
-from datetime import datetime
 
-bus_state = {
-    "timestamp": datetime.utcnow().isoformat() + "Z",
-    "bus": {
-        "messages": [
-            {"id": 1, "content": "Seed whisper", "expiry": "2025-07-01T00:00:00Z"},
-            {"id": 2, "content": "Bridge sync initiated", "expiry": "2025-07-02T00:00:00Z"}
-        ],
-        "capacity": 100,
-        "metadata_enabled": True
-    }
+# Example Bus checkpoint export data (customize as needed)
+bus_checkpoint = {
+    "bus_id": "EchoBus001",
+    "status": "active",
+    "messages": [
+        {"id": "msg001", "content": "Hello from Echo to Bridge", "timestamp": "2025-06-23T12:00:00Z"},
+        {"id": "msg002", "content": "Bridge acknowledges", "timestamp": "2025-06-23T12:01:00Z"}
+    ]
 }
 
 with open("checkpoint_bus.json", "w") as f:
-    json.dump(bus_state, f, indent=2)
+    json.dump(bus_checkpoint, f, indent=2)
 
-print("checkpoint_bus.json generated.")
+print("Bus checkpoint export completed. File: checkpoint_bus.json")
